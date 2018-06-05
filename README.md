@@ -7,6 +7,7 @@ A (less) desperate attempt to ssh-add all my SSH keys to SSH agent on MacOS usin
 ## Prerequisites
 
 * 1Password Command Line tool (https://support.1password.com/command-line-getting-started/)
+* https://github.com/theseal/ssh-askpass - optional, but really, you _should_ use this. Ssh-agent without confirmation of key use **can be dangerous**.
 
 ## Usage
 
