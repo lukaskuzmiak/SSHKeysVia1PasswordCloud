@@ -11,11 +11,25 @@
 
 OP=/usr/local/bin/op
 SECRETS_FILE=$HOME/.op.secrets
+HELPER_PATH=$HOME/ssh-add-pass-helper.sh
+DISPLAY_VAL=$DISPLAY
 
 if [ ! -f "$SECRETS_FILE" ]; then
     echo "Secrets file '$SECRETS_FILE' does not exist!"
     exit 1
 fi
+
+if [ ! -f "$HELPER_PATH" ]; then
+    echo "Helper script '$HELPER_PATH' does not exist!"
+    exit 2
+fi
+
+if [ -z "$DISPLAY_VAL" ]; then
+	echo "WARN: \$DISPLAY is empty, will run with DISPLAY=1 for ssh-add to work."
+	DISPLAY_VAL=1
+fi
+
+which -s jq || { echo "jq not found, won't be able to parse json, 'brew install jq' or install it by hand."; exit 3; }
 
 SIGNIN_SUBDOMAIN=$(sed '1q;d' "$SECRETS_FILE")
 SIGNIN_EMAIL=$(sed '2q;d' "$SECRETS_FILE")
@@ -30,7 +44,7 @@ function addKeyFile() {
 
     local passphrase=$($OP get item "$pwd_name" --session="$SESSION" | jq -r '.details.password') # .details.password works for Password type item (NOT Login)
 
-    echo "$passphrase" | SSH_ASKPASS="$HOME/ssh-add-pass-helper.sh" ssh-add -q -c "$keyfile" 2>/dev/null
+    echo "$passphrase" | DISPLAY="$DISPLAY_VAL" SSH_ASKPASS="$HELPER_PATH" ssh-add -q -c "$keyfile" 2>/dev/null
     local ret=$?
 
     if [ "$ret" -ne 0 ]; then
